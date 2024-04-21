@@ -15,7 +15,10 @@
  */
 package org.traccar.handler.events;
 
-import jakarta.inject.Inject;
+import io.netty.channel.ChannelHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.traccar.database.CommandsManager;
 import org.traccar.helper.model.PositionUtil;
 import org.traccar.model.Calendar;
 import org.traccar.model.Command;
@@ -24,9 +27,14 @@ import org.traccar.model.Geofence;
 import org.traccar.model.Position;
 import org.traccar.session.cache.CacheManager;
 
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 
+@Singleton
+@ChannelHandler.Sharable
 public class GeofenceEventHandler extends BaseEventHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GeofenceEventHandler.class);
@@ -72,17 +80,14 @@ public class GeofenceEventHandler extends BaseEventHandler {
                         command.setType(Command.TYPE_ENGINE_STOP);
 
                         try {
-                            if (!commandsManager.sendCommand(command)) {
+                            if (commandsManager.sendCommand(command) == null) {
                                 LOGGER.info("FoxGPS - BLOQUEIO SAIU DA CERCA:" + Response.accepted(command).build());
                             }
                         } catch (Exception e) {
                             LOGGER.warn("FoxGPS - BLOQUEIO SAIU DA CERCA:" + e.getMessage());
                         }
-
                         event.setGeofenceId(geofenceId);
-                        events.put(event, position);
                     }
-
                     event.setGeofenceId(geofenceId);
                     callback.eventDetected(event);
                 }
@@ -100,17 +105,14 @@ public class GeofenceEventHandler extends BaseEventHandler {
                     command.setType(Command.TYPE_ENGINE_STOP);
 
                     try {
-                        if (!commandsManager.sendCommand(command)) {
+                        if (commandsManager.sendCommand(command) == null) {
                             LOGGER.info("FoxGPS - BLOQUEIO ENTROU DA CERCA:" + Response.accepted(command).build());
                         }
                     } catch (Exception e) {
                         LOGGER.warn("FoxGPS - BLOQUEIO ENTROU DA CERCA:" + e.getMessage());
                     }
-
                     event.setGeofenceId(geofenceId);
-                    events.put(event, position);
                 }
-
                 event.setGeofenceId(geofenceId);
                 callback.eventDetected(event);
             }

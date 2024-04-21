@@ -404,25 +404,6 @@ public class NavtelecomProtocolDecoder extends BaseProtocolDecoder {
                                 case 206:
                                     position.set("diagnostic", buf.readUnsignedIntLE());
                                     break;
-                                case 163:
-                                case 164:
-                                case 165:
-                                case 166:
-                                    value = buf.readShortLE();
-                                    position.set(
-                                            Position.PREFIX_TEMP + (j + 2 + 8 - 163),
-                                            (value != (short) 0x8000) ? value * 0.05 : null);
-                                    break;
-                                case 167:
-                                case 168:
-                                case 169:
-                                case 170:
-                                    value = buf.readUnsignedByte();
-                                    position.set("humidity" + (j + 2 - 167), (value != 0xFF) ? value * 0.5 : null);
-                                    break;
-                                case 206:
-                                    position.set("diagnostic", buf.readUnsignedIntLE());
-                                    break;
                                 default:
                                     if ((207 <= j) && (j <= 222)) {
                                         position.set("user1Byte" + (j + 1 - 207), buf.readUnsignedByte());
