@@ -15,36 +15,36 @@
  */
 package org.traccar.handler.events;
 
-import io.netty.channel.ChannelHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.traccar.database.CommandsManager;
+import jakarta.inject.Inject;
+import io.netty.channel.ChannelHandler; // Rogerio
+import org.slf4j.Logger;  // Rogerio
+import org.slf4j.LoggerFactory;  // Rogerio
+import org.traccar.database.CommandsManager;  // Rogerio
 import org.traccar.helper.model.PositionUtil;
 import org.traccar.model.Calendar;
-import org.traccar.model.Command;
+import org.traccar.model.Command; // Rogerio
 import org.traccar.model.Event;
 import org.traccar.model.Geofence;
 import org.traccar.model.Position;
 import org.traccar.session.cache.CacheManager;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-import jakarta.ws.rs.core.Response;
+import jakarta.inject.Singleton; // Rogerio
+import jakarta.ws.rs.core.Response; // Rogerio
 import java.util.ArrayList;
 import java.util.List;
 
-@Singleton
-@ChannelHandler.Sharable
+@Singleton // Rogerio
+@ChannelHandler.Sharable // Rogerio
 public class GeofenceEventHandler extends BaseEventHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GeofenceEventHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GeofenceEventHandler.class); // Rogerio
     private final CacheManager cacheManager;
-    private final CommandsManager commandsManager;
+    private final CommandsManager commandsManager; // Rogerio
 
     @Inject
-    public GeofenceEventHandler(CacheManager cacheManager, CommandsManager commandsManager) {
+    public GeofenceEventHandler(CacheManager cacheManager, CommandsManager commandsManager) { // Rogerio
         this.cacheManager = cacheManager;
-        this.commandsManager = commandsManager;
+        this.commandsManager = commandsManager; // Rogerio
     }
 
     @Override
@@ -73,7 +73,7 @@ public class GeofenceEventHandler extends BaseEventHandler {
                 Calendar calendar = calendarId != 0 ? cacheManager.getObject(Calendar.class, calendarId) : null;
                 if (calendar == null || calendar.checkMoment(position.getFixTime())) {
                     Event event = new Event(Event.TYPE_GEOFENCE_EXIT, position);
-
+ // Rogerio Inicio
                     if (geofence.getStopOut()) {
                         Command command = new Command();
                         command.setDeviceId(position.getDeviceId());
@@ -88,6 +88,7 @@ public class GeofenceEventHandler extends BaseEventHandler {
                         }
                         event.setGeofenceId(geofenceId);
                     }
+ // Rogerio FIM
                     event.setGeofenceId(geofenceId);
                     callback.eventDetected(event);
                 }
@@ -98,7 +99,7 @@ public class GeofenceEventHandler extends BaseEventHandler {
             Calendar calendar = calendarId != 0 ? cacheManager.getObject(Calendar.class, calendarId) : null;
             if (calendar == null || calendar.checkMoment(position.getFixTime())) {
                 Event event = new Event(Event.TYPE_GEOFENCE_ENTER, position);
-
+ // Rogerio Inicio
                 if (cacheManager.getObject(Geofence.class, geofenceId).getStopIn()) {
                     Command command = new Command();
                     command.setDeviceId(position.getDeviceId());
@@ -113,6 +114,7 @@ public class GeofenceEventHandler extends BaseEventHandler {
                     }
                     event.setGeofenceId(geofenceId);
                 }
+ // Rogerio FIM
                 event.setGeofenceId(geofenceId);
                 callback.eventDetected(event);
             }
