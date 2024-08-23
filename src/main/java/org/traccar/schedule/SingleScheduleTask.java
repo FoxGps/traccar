@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 - 2024 Anton Tananaev (anton@traccar.org)
+ * Copyright 2024 Anton Tananaev (anton@traccar.org)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.traccar.session.cache;
+package org.traccar.schedule;
 
-import org.traccar.model.BaseModel;
-
-record CacheKey(Class<? extends BaseModel> clazz, long id) {
-    CacheKey(BaseModel object) {
-        this(object.getClass(), object.getId());
+public abstract class SingleScheduleTask implements ScheduleTask {
+    @Override
+    public boolean multipleInstances() {
+        return false;
     }
 }

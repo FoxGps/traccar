@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "FOX GPS",
-    "version": "6.2",
+    "version": "6.4",
     "description": "Documentação da API do servidor de rastreamento FOX GPS. Para usar a API, você precisa ter uma conta válida no servidor [criar conta](http://app.foxgps.com.br:8082/register).",
     "contact": {
       "name": "FOX GPS Support",

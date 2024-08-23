@@ -66,7 +66,7 @@ public class Geofence extends ExtendedModel implements Schedulable {
         return stopOut;
     }
 
-    public void setStopOut(Boolean valueStopOut) {
+    public void setStopOut(boolean valueStopOut) {
         this.stopOut = valueStopOut;
     }
 
@@ -76,7 +76,7 @@ public class Geofence extends ExtendedModel implements Schedulable {
         return stopIn;
     }
 
-    public void setStopIn(Boolean valueStopIn) {
+    public void setStopIn(boolean valueStopIn) {
         this.stopIn = valueStopIn;
     }
  // Rogerio FIM

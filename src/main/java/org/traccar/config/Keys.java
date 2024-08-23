@@ -1811,6 +1811,15 @@ public final class Keys {
             List.of(KeyType.CONFIG));
 
     /**
+     * If this parameter is set, Traccar will monitor drops in the number of stored messages. If it drops more than
+     * the threshold, it will mark service as failing for systemd. Threshold is a value from 0.0 to 1.0. For example,
+     * value 0.7 means that the number of messages in the last period is only 70% of what it was in the previous.
+     */
+    public static final ConfigKey<Double> WEB_HEALTH_CHECK_DROP_THRESHOLD = new DoubleConfigKey(
+            "web.healthCheck.dropThreshold",
+            List.of(KeyType.CONFIG));
+
+    /**
      * Sets SameSite cookie attribute value.
      * Supported options: Lax, Strict, None.
      */
@@ -1902,6 +1911,14 @@ public final class Keys {
             true);
 
     /**
+     * If all bytes are printable characters, log network data as text instead of HEX.
+     */
+    public static final ConfigKey<Boolean> LOGGER_TEXT_PROTOCOL = new BooleanConfigKey(
+            "logger.decodeTextData",
+            List.of(KeyType.CONFIG),
+            true);
+
+    /**
      * Log file rotation interval, the default rotation interval is once a day.
      * This option is ignored if 'logger.rotate' = false
      * Available options: day, hour
@@ -1920,8 +1937,8 @@ public final class Keys {
             "time,position,speed,course,accuracy,result");
 
     /**
-     * Broadcast method. Available options are "multicast" and "redis". By default (if the value is not
-     * specified or does not matches available options) server disables broadcast.
+     * Broadcast method. Available options are "multicast" and "redis". By default, (if the value is not
+     * specified or does not match available options) server disables broadcast.
      */
     public static final ConfigKey<String> BROADCAST_TYPE = new StringConfigKey(
             "broadcast.type",
@@ -1946,6 +1963,13 @@ public final class Keys {
      */
     public static final ConfigKey<Integer> BROADCAST_PORT = new IntegerConfigKey(
             "broadcast.port",
+            List.of(KeyType.CONFIG));
+
+    /**
+     * Flag to mark secondary servers. Some tasks, like scheduled reports, will be executed on the main server only.
+     */
+    public static final ConfigKey<Boolean> BROADCAST_SECONDARY = new BooleanConfigKey(
+            "broadcast.secondary",
             List.of(KeyType.CONFIG));
 
 }
