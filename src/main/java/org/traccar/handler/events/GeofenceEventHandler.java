@@ -105,11 +105,11 @@ public class GeofenceEventHandler extends BaseEventHandler {
 
         try {
             if (commandsManager.sendCommand(command) == null) {
-                LOGGER.info("FoxGPS - BLOQUEIO {} DA CERCA {}: {}", 
+                LOGGER.info("FoxGPS - BLOQUEIO {} DA CERCA {}: {}",
                     action, geofenceId, Response.accepted(command).build());
             }
         } catch (Exception e) {
-            LOGGER.warn("FoxGPS - BLOQUEIO {} DA CERCA {}: Falha ao enviar comando para o dispositivo {}", 
+            LOGGER.warn("FoxGPS - BLOQUEIO {} DA CERCA {}: Falha ao enviar comando para o dispositivo {}",
                 action, geofenceId, position.getDeviceId(), e);
         }
     }
