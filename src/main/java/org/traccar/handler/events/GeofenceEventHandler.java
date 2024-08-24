@@ -73,18 +73,15 @@ public class GeofenceEventHandler extends BaseEventHandler {
                 Calendar calendar = calendarId != 0 ? cacheManager.getObject(Calendar.class, calendarId) : null;
                 if (calendar == null || calendar.checkMoment(position.getFixTime())) {
                     Event event = new Event(Event.TYPE_GEOFENCE_EXIT, position);
-// fox
                     if (geofence.getStopOut()) {
                         sendEngineStopCommand(position, geofenceId, "SAIU");
                     }
-// fox
                     event.setGeofenceId(geofenceId);
                     callback.eventDetected(event);
                 }
             }
         }
         for (long geofenceId : newGeofences) {
-// fox
             Geofence geofence = cacheManager.getObject(Geofence.class, geofenceId);
             if (geofence != null) {
                 long calendarId = geofence.getCalendarId();
@@ -97,9 +94,7 @@ public class GeofenceEventHandler extends BaseEventHandler {
                     event.setGeofenceId(geofenceId);
                     callback.eventDetected(event);
                 }
-// fox
             }
-// fox
         }
     }
 
@@ -116,7 +111,6 @@ public class GeofenceEventHandler extends BaseEventHandler {
         } catch (Exception e) {
             LOGGER.warn("FoxGPS - BLOQUEIO {} DA CERCA {}: Falha ao enviar comando para o dispositivo {}", 
                 action, geofenceId, position.getDeviceId(), e);
-// fox
         }
     }
 }
