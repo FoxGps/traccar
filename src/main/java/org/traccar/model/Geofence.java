@@ -59,14 +59,14 @@ public class Geofence extends ExtendedModel implements Schedulable {
     public void setDescription(String description) {
         this.description = description;
     }
-
+ // Rogerio Inicio
     private boolean stopOut;
 
     public boolean getStopOut() {
         return stopOut;
     }
 
-    public void setStopOut(Boolean valueStopOut) {
+    public void setStopOut(boolean valueStopOut) {
         this.stopOut = valueStopOut;
     }
 
@@ -76,10 +76,10 @@ public class Geofence extends ExtendedModel implements Schedulable {
         return stopIn;
     }
 
-    public void setStopIn(Boolean valueStopIn) {
+    public void setStopIn(boolean valueStopIn) {
         this.stopIn = valueStopIn;
     }
-
+ // Rogerio FIM
     private String area;
 
     public String getArea() {
