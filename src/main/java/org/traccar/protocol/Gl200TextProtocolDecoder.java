@@ -968,15 +968,23 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         if (model.startsWith("GV") && !model.startsWith("GV6")) {
             position.set(Position.PREFIX_ADC + 2, v[index++].isEmpty() ? null : Integer.parseInt(v[index - 1]) * 0.001);
         }
+        if (model.equals("GV200") || model.equals("GV310LAU")) {
+            position.set(Position.PREFIX_ADC + 3, v[index++].isEmpty() ? null : Integer.parseInt(v[index - 1]) * 0.001);
+        }
         if (model.startsWith("GV355CEU")) {
             index += 1; // reserved
         }
 
-        position.set(Position.KEY_BATTERY_LEVEL, v[index++].isEmpty() ? null : Integer.parseInt(v[index - 1]));
         if (model.startsWith("GL5")) {
+            position.set(Position.KEY_BATTERY_LEVEL, v[index++].isEmpty() ? null : Integer.parseInt(v[index - 1]));
             index += 1; // mode selection
             position.set(Position.KEY_MOTION, v[index++].isEmpty() ? null : Integer.parseInt(v[index - 1]) > 0);
+        } else if (model.equals("GV200")) {
+            position.set(Position.KEY_INPUT, v[index++].isEmpty() ? null : Integer.parseInt(v[index - 1], 16));
+            position.set(Position.KEY_OUTPUT, v[index++].isEmpty() ? null : Integer.parseInt(v[index - 1], 16));
+            index += 1; // uart device type
         } else {
+            position.set(Position.KEY_BATTERY_LEVEL, v[index++].isEmpty() ? null : Integer.parseInt(v[index - 1]));
             if (!v[index++].isEmpty()) {
                 decodeStatus(position, Long.parseLong(v[index - 1]));
             }
@@ -984,7 +992,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         }
 
         if (BitUtil.check(mask, 0)) {
-            position.set(Position.KEY_FUEL_LEVEL, Integer.parseInt(v[index++], 16));
+            position.set(Position.KEY_FUEL_LEVEL, v[index++].isEmpty() ? null : Integer.parseInt(v[index - 1], 16));
         }
 
         if (BitUtil.check(mask, 1)) {
@@ -1227,7 +1235,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
 
         getLastLocation(position, null);
 
-        position.set(Position.KEY_ALARM, sentence.contains("PNA") ? Position.ALARM_POWER_ON : Position.ALARM_POWER_OFF);
+        position.addAlarm(sentence.contains("PNA") ? Position.ALARM_POWER_ON : Position.ALARM_POWER_OFF);
 
         return position;
     }
@@ -1258,7 +1266,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         int warningType = parser.nextInt();
         int fatigueDegree = parser.nextInt();
         if (warningType == 1) {
-            position.set(Position.KEY_ALARM, Position.ALARM_FATIGUE_DRIVING);
+            position.addAlarm(Position.ALARM_FATIGUE_DRIVING);
             position.set("fatigueDegree", fatigueDegree);
         } else {
             position.set("warningType", warningType);
@@ -1446,6 +1454,47 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
+    private Object decodeLbs(Channel channel, SocketAddress remoteAddress, String[] v) throws ParseException {
+        int index = 0;
+        index += 1; // header
+        index += 1; // protocol version
+        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, v[index++]);
+        if (deviceSession == null) {
+            return null;
+        }
+        Position position = new Position(getProtocolName());
+        position.setDeviceId(deviceSession.getDeviceId());
+
+        index += 1; // device name
+        index += 1; // trigger type
+        index += 1; // report type
+        position.set(Position.KEY_BATTERY_LEVEL, Integer.parseInt(v[index++]));
+        index += 1; // reserved
+        index += 1; // motion status
+        index += 1; // reserved
+        index += 1; // reserved
+        index += 1; // component expansion mask
+
+        Network network = new Network();
+        for (int i = 0; i <= 6; i++) {
+            if (!v[index + 1].isEmpty()) {
+                network.addCellTower(CellTower.from(
+                        Integer.parseInt(v[index++]), Integer.parseInt(v[index++]),
+                        Integer.parseInt(v[index++], 16), Integer.parseInt(v[index++], 16),
+                        Integer.parseInt(v[index++])));
+            } else {
+                index += 5; // empty
+            }
+            index += 1; // reserved
+        }
+        position.setNetwork(network);
+
+        Date time = dateFormat.parse(v[v.length - 2]);
+        getLastLocation(position, time);
+
+        return position;
+    }
+
     private static final Pattern PATTERN = new PatternBuilder()
             .text("+").expression("(?:RESP|BUFF):GT...,")
             .expression("(?:.{6}|.{10})?,")      // protocol version
@@ -1480,16 +1529,16 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         if (type.equals("NMR")) {
             position.set(Position.KEY_MOTION, reportType == 1);
         } else if (type.equals("SOS")) {
-            position.set(Position.KEY_ALARM, Position.ALARM_SOS);
+            position.addAlarm(Position.ALARM_SOS);
         } else if (type.equals("DIS")) {
             position.set(Position.PREFIX_IN + reportType / 0x10, reportType % 0x10 == 1);
         } else if (type.equals("IGL")) {
             position.set(Position.KEY_IGNITION, reportType % 0x10 == 1);
         } else if (type.equals("HBM")) {
             switch (reportType % 0x10) {
-                case 0, 3 -> position.set(Position.KEY_ALARM, Position.ALARM_BRAKING);
-                case 1, 4 -> position.set(Position.KEY_ALARM, Position.ALARM_ACCELERATION);
-                case 2 -> position.set(Position.KEY_ALARM, Position.ALARM_CORNERING);
+                case 0, 3 -> position.addAlarm(Position.ALARM_BRAKING);
+                case 1, 4 -> position.addAlarm(Position.ALARM_ACCELERATION);
+                case 2 -> position.addAlarm(Position.ALARM_CORNERING);
             }
         }
 
@@ -1577,17 +1626,17 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         decodeDeviceTime(position, parser);
 
         switch (type) {
-            case "TOW" -> position.set(Position.KEY_ALARM, Position.ALARM_TOW);
-            case "IDL" -> position.set(Position.KEY_ALARM, Position.ALARM_IDLE);
-            case "PNA" -> position.set(Position.KEY_ALARM, Position.ALARM_POWER_ON);
-            case "PFA" -> position.set(Position.KEY_ALARM, Position.ALARM_POWER_OFF);
-            case "EPN", "MPN" -> position.set(Position.KEY_ALARM, Position.ALARM_POWER_RESTORED);
-            case "EPF", "MPF" -> position.set(Position.KEY_ALARM, Position.ALARM_POWER_CUT);
-            case "BPL" -> position.set(Position.KEY_ALARM, Position.ALARM_LOW_BATTERY);
-            case "STT" -> position.set(Position.KEY_ALARM, Position.ALARM_MOVEMENT);
-            case "SWG" -> position.set(Position.KEY_ALARM, Position.ALARM_GEOFENCE);
-            case "TMP", "TEM" -> position.set(Position.KEY_ALARM, Position.ALARM_TEMPERATURE);
-            case "JDR", "JDS" -> position.set(Position.KEY_ALARM, Position.ALARM_JAMMING);
+            case "TOW" -> position.addAlarm(Position.ALARM_TOW);
+            case "IDL" -> position.addAlarm(Position.ALARM_IDLE);
+            case "PNA" -> position.addAlarm(Position.ALARM_POWER_ON);
+            case "PFA" -> position.addAlarm(Position.ALARM_POWER_OFF);
+            case "EPN", "MPN" -> position.addAlarm(Position.ALARM_POWER_RESTORED);
+            case "EPF", "MPF" -> position.addAlarm(Position.ALARM_POWER_CUT);
+            case "BPL" -> position.addAlarm(Position.ALARM_LOW_BATTERY);
+            case "STT" -> position.addAlarm(Position.ALARM_MOVEMENT);
+            case "SWG" -> position.addAlarm(Position.ALARM_GEOFENCE);
+            case "TMP", "TEM" -> position.addAlarm(Position.ALARM_TEMPERATURE);
+            case "JDR", "JDS" -> position.addAlarm(Position.ALARM_JAMMING);
         }
 
         return position;
@@ -1629,6 +1678,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
                 case "BAA" -> decodeBaa(channel, remoteAddress, sentence);
                 case "BID" -> decodeBid(channel, remoteAddress, sentence);
                 case "LSA" -> decodeLsa(channel, remoteAddress, sentence);
+                case "LBS" -> decodeLbs(channel, remoteAddress, values);
                 default -> decodeOther(channel, remoteAddress, sentence, type);
             };
 

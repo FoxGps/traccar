@@ -47,6 +47,7 @@ import org.traccar.forward.PositionForwarderKafka;
 import org.traccar.forward.PositionForwarderRedis;
 import org.traccar.forward.PositionForwarderUrl;
 import org.traccar.forward.PositionForwarderMqtt;
+import org.traccar.forward.PositionForwarderWialon;
 import org.traccar.geocoder.AddressFormat;
 import org.traccar.geocoder.BanGeocoder;
 import org.traccar.geocoder.BingMapsGeocoder;
@@ -104,6 +105,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainModule extends AbstractModule {
 
@@ -118,6 +121,12 @@ public class MainModule extends AbstractModule {
         bindConstant().annotatedWith(Names.named("configFile")).to(configFile);
         bind(Config.class).asEagerSingleton();
         bind(Timer.class).to(HashedWheelTimer.class).in(Scopes.SINGLETON);
+    }
+
+    @Singleton
+    @Provides
+    public static ExecutorService provideExecutorService() {
+        return Executors.newCachedThreadPool();
     }
 
     @Singleton
@@ -325,11 +334,11 @@ public class MainModule extends AbstractModule {
     @Singleton
     @Provides
     public static BroadcastService provideBroadcastService(
-            Config config, ObjectMapper objectMapper) throws IOException {
+            Config config, ExecutorService executorService, ObjectMapper objectMapper) throws IOException {
         if (config.hasKey(Keys.BROADCAST_TYPE)) {
             return switch (config.getString(Keys.BROADCAST_TYPE)) {
-                case "multicast" -> new MulticastBroadcastService(config, objectMapper);
-                case "redis" -> new RedisBroadcastService(config, objectMapper);
+                case "multicast" -> new MulticastBroadcastService(config, executorService, objectMapper);
+                case "redis" -> new RedisBroadcastService(config, executorService, objectMapper);
                 default -> new NullBroadcastService();
             };
         }
@@ -353,7 +362,8 @@ public class MainModule extends AbstractModule {
 
     @Singleton
     @Provides
-    public static PositionForwarder providePositionForwarder(Config config, Client client, ObjectMapper objectMapper) {
+    public static PositionForwarder providePositionForwarder(
+            Config config, Client client, ExecutorService executorService, ObjectMapper objectMapper) {
         if (config.hasKey(Keys.FORWARD_URL)) {
             return switch (config.getString(Keys.FORWARD_TYPE)) {
                 case "json" -> new PositionForwarderJson(config, client, objectMapper);
@@ -361,6 +371,7 @@ public class MainModule extends AbstractModule {
                 case "kafka" -> new PositionForwarderKafka(config, objectMapper);
                 case "mqtt" -> new PositionForwarderMqtt(config, objectMapper);
                 case "redis" -> new PositionForwarderRedis(config, objectMapper);
+                case "wialon" -> new PositionForwarderWialon(config, executorService, "1.0");
                 default -> new PositionForwarderUrl(config, client, objectMapper);
             };
         }

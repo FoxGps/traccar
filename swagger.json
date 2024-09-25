@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "FOX GPS",
-    "version": "6.4",
+    "version": "6.5",
     "description": "Documentação da API do servidor de rastreamento FOX GPS. Para usar a API, você precisa ter uma conta válida no servidor [criar conta](http://app.foxgps.com.br:8082/register).",
     "contact": {
       "name": "FOX GPS Support",
@@ -18,6 +18,22 @@
     {
       "url": "https://api.foxgps.com.br/api",
       "description": "FOX GPS Server"
+    },
+    {
+      "url": "http://{host}:{port}/api",
+      "description": "Other Server",
+      "variables": {
+        "host": {
+          "default": "localhost"
+        },
+        "port": {
+          "enum": [
+            "8082",
+            "80"
+          ],
+          "default": "8082"
+        }
+      }
     }
   ],
   "security": [
@@ -2741,9 +2757,6 @@
           "password": {
             "type": "string"
           },
-          "twelveHourFormat": {
-            "type": "boolean"
-          },
           "coordinateFormat": {
             "type": "string"
           },
@@ -2817,9 +2830,6 @@
           },
           "zoom": {
             "type": "integer"
-          },
-          "twelveHourFormat": {
-            "type": "boolean"
           },
           "version": {
             "type": "string"

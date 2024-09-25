@@ -42,7 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 public class ComputedAttributesHandler extends BasePositionHandler {
 
@@ -140,10 +139,10 @@ public class ComputedAttributesHandler extends BasePositionHandler {
     }
 
     @Override
-    public void handlePosition(Position position, Callback callback) {
+    public void onPosition(Position position, Callback callback) {
         var attributes = cacheManager.getDeviceObjects(position.getDeviceId(), Attribute.class).stream()
                 .sorted(Comparator.comparing(Attribute::getPriority).reversed())
-                .collect(Collectors.toUnmodifiableList());
+                .toList();
         for (Attribute attribute : attributes) {
             if (attribute.getAttribute() != null) {
                 try {

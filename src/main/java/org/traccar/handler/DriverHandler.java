@@ -1,6 +1,5 @@
 /*
- * Copyright 2017 - 2024 Anton Tananaev (anton@traccar.org)
- * Copyright 2017 Andrey Kunitsyn (andrey@traccar.org)
+ * Copyright 2024 Anton Tananaev (anton@traccar.org)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,26 +16,30 @@
 package org.traccar.handler;
 
 import jakarta.inject.Inject;
+import org.traccar.config.Config;
 import org.traccar.config.Keys;
-import org.traccar.helper.model.AttributeUtil;
+import org.traccar.model.Driver;
 import org.traccar.model.Position;
 import org.traccar.session.cache.CacheManager;
 
-public class MotionHandler extends BasePositionHandler {
+public class DriverHandler extends BasePositionHandler {
 
     private final CacheManager cacheManager;
+    private final boolean useLinkedDriver;
 
     @Inject
-    public MotionHandler(CacheManager cacheManager) {
+    public DriverHandler(Config config, CacheManager cacheManager) {
         this.cacheManager = cacheManager;
+        useLinkedDriver = config.getBoolean(Keys.PROCESSING_USE_LINKED_DRIVER);
     }
 
     @Override
     public void onPosition(Position position, Callback callback) {
-        if (!position.hasAttribute(Position.KEY_MOTION)) {
-            double threshold = AttributeUtil.lookup(
-                    cacheManager, Keys.EVENT_MOTION_SPEED_THRESHOLD, position.getDeviceId());
-            position.set(Position.KEY_MOTION, position.getSpeed() > threshold);
+        if (useLinkedDriver && !position.hasAttribute(Position.KEY_DRIVER_UNIQUE_ID)) {
+            var drivers = cacheManager.getDeviceObjects(position.getDeviceId(), Driver.class);
+            if (!drivers.isEmpty()) {
+                position.set(Position.KEY_DRIVER_UNIQUE_ID, drivers.iterator().next().getUniqueId());
+            }
         }
         callback.processed(false);
     }
